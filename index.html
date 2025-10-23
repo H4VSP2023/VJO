@@ -17,9 +17,11 @@ Developed by: Vulnsec Legion
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
-            --neon-color: #00FFC2;
-            --dark-bg: #1A1A2E;
-            --output-bg: #1A1A2E; 
+            --neon-color: #00FFC2; /* Main Teal/Cyan */
+            --dark-bg: #0A0A10; /* Very deep dark background */
+            --card-bg: #0D0D15; 
+            --output-bg: #151525; /* Darker blue-purple tint for output/input */
+            --accent-color: #A0B4FF;
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -29,35 +31,62 @@ Developed by: Vulnsec Legion
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 1rem;
+            padding: 1.5rem;
             position: relative; 
         }
-        .neon-border {
-            border: 2px solid var(--neon-color);
+        .app-card {
+            background-color: var(--card-bg);
             box-shadow: 
-                0 0 10px var(--neon-color),
-                0 0 20px rgba(0, 255, 194, 0.4);
-            transition: all 0.3s ease-in-out;
+                0 0 15px rgba(0, 255, 194, 0.15), /* Subtle main glow */
+                0 0 40px rgba(0, 0, 0, 0.7); /* Deep central shadow */
+            border: 1px solid rgba(0, 255, 194, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        .neon-border:hover {
-            box-shadow: 
-                0 0 15px var(--neon-color),
-                0 0 30px rgba(0, 255, 194, 0.6);
+        .neon-border-focus {
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-        .neon-text-glow {
+        .neon-border-focus:focus {
+            border-color: var(--neon-color);
+            box-shadow: 0 0 15px var(--neon-color), inset 0 0 5px rgba(0, 255, 194, 0.5);
+        }
+        .neon-text-main {
+            color: var(--neon-color);
             text-shadow: 
-                0 0 5px var(--neon-color),
-                0 0 10px rgba(0, 255, 194, 0.5);
+                0 0 5px rgba(0, 255, 194, 0.7),
+                0 0 15px rgba(0, 255, 194, 0.4),
+                0 0 25px rgba(0, 255, 194, 0.1);
         }
+        
+        /* Button Enhancements */
         .neon-btn {
             background-color: var(--neon-color);
-            color: #1A1A2E;
+            color: var(--dark-bg);
             font-weight: 800;
-            transition: all 0.2s;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border: none;
+            transition: all 0.2s ease-in-out;
+            animation: pulse-glow 2s infinite alternate ease-in-out;
         }
         .neon-btn:hover {
-            box-shadow: 0 0 15px var(--neon-color);
-            transform: translateY(-2px);
+            box-shadow: 0 0 25px var(--neon-color);
+            transform: translateY(-2px) scale(1.01);
+            animation-play-state: paused;
+        }
+        .neon-btn:active {
+            transform: translateY(0) scale(0.99);
+            box-shadow: 0 0 5px var(--neon-color);
+        }
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 10px rgba(0, 255, 194, 0.7); }
+            to { box-shadow: 0 0 20px rgba(0, 255, 194, 0.9), 0 0 5px rgba(0, 255, 194, 0.5); }
+        }
+
+        .input-box {
+            background-color: var(--output-bg);
+            border: 1px solid #333345;
+            line-height: 1.5;
+            font-size: 0.875rem; /* Ensure consistent text sizing */
         }
         .input-group {
             position: relative;
@@ -67,46 +96,62 @@ Developed by: Vulnsec Legion
             top: 1rem;
             left: 1rem;
             right: 1rem;
-            color: #6B7280;
+            color: #5A5A70; /* More subtle placeholder color */
             pointer-events: none;
             transition: opacity 0.3s ease;
             white-space: pre-wrap;
             word-break: break-all;
             font-size: 0.875rem;
+            line-height: 1.5; 
         }
-        .loading-spinner {
-            border: 6px solid #33334F;
-            border-top: 6px solid var(--neon-color);
+        .loading-spinner-styled {
+            border: 4px solid #33334F;
+            border-top: 4px solid var(--neon-color);
             border-radius: 50%;
-            width: 2rem;
-            height: 2rem;
+            width: 1.5rem;
+            height: 1.5rem;
             animation: spin 0.8s linear infinite;
-            box-shadow: 0 0 8px var(--neon-color);
+            box-shadow: 0 0 6px var(--neon-color);
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        #jso-output {
+        
+        /* Code Specifics for Output */
+        #jso-result-area {
             display: block;
             word-break: normal;
             white-space: pre; 
+            font-family: ui-monospace, Menlo, Monaco, 'Consolas', monospace; /* Monospaced for code clarity */
+            line-height: 1.4;
         }
-        .copy-btn-neon {
+
+        /* Mini Copy Button */
+        .copy-btn-neon-mini {
             border: 1px solid var(--neon-color); 
-            box-shadow: 0 0 4px var(--neon-color);
+            box-shadow: 0 0 8px rgba(0, 255, 194, 0.5); /* Stronger mini glow */
             background-color: var(--output-bg);
             color: var(--neon-color);
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-size: 0.75rem; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 0.7rem; 
             margin-right: 8px;
             margin-top: 8px; 
+            transition: all 0.2s;
+            font-weight: 600;
         }
-        .copy-btn-neon:hover {
-            box-shadow: 0 0 8px var(--neon-color);
-            background-color: #282845;
+        .copy-btn-neon-mini:hover {
+            box-shadow: 0 0 12px var(--neon-color);
+            background-color: #202035;
         }
+        .copy-btn-neon-mini:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Toast Styles (Kept consistent and modern) */
         #toast-container {
             position: fixed;
             bottom: 20px;
@@ -121,78 +166,79 @@ Developed by: Vulnsec Legion
         .toast {
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
-            color: #E0E0E0;
             font-weight: 600;
             opacity: 0;
             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
             transform: translateY(20px); 
             min-width: 250px;
             max-width: 90vw;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
             text-align: center;
-            text-shadow: none; 
         }
         .toast-visible {
             opacity: 1;
             transform: translateY(0);
         }
         .toast-success {
-            background-color: #0F0F1A; 
+            background-color: var(--card-bg); 
             border: 1px solid var(--neon-color);
             color: var(--neon-color);
             font-weight: 600;
-            box-shadow: 0 0 10px var(--neon-color);
+            box-shadow: 0 0 10px var(--neon-color), inset 0 0 2px rgba(0, 255, 194, 0.5);
         }
         .toast-error {
-            background-color: #FF6B6B;
-            color: #1A1A2E;
+            background-color: #A32020;
+            color: #FFDCDC;
             font-weight: 800;
+            border: 1px solid #E00000;
+            box-shadow: 0 0 10px #FF6B6B;
+        }
+        .footer-link {
+            color: var(--accent-color);
         }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div class="w-full max-w-4xl bg-[#0F0F1A] p-6 sm:p-10 rounded-xl shadow-2xl neon-border">
+    <div class="w-full max-w-4xl p-8 sm:p-12 rounded-xl app-card">
         
-        <header class="text-center mb-10">
-            <!-- Main Title is here -->
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-white neon-text-glow tracking-wider">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-extrabold neon-text-main tracking-widest">
                 VSP-JSO
             </h1>
-            <p class="text-sm sm:text-lg text-gray-400 mt-2">Convert HTML into JSO</p>
+            <p class="text-md sm:text-xl text-gray-400 mt-2 font-light">Convert HTML into JSO</p>
         </header>
 
-        <main class="space-y-8">
+        <main class="space-y-12">
             <div class="input-group">
-                <p id="input-description" class="input-description text-sm sm:text-base">
+                <p id="floating-desc-el" class="input-description text-sm sm:text-base">
                     Paste your HTML code here!
                 </p>
                 <textarea 
-                    id="html-input" 
+                    id="html-input-zone" 
                     rows="10" 
-                    class="w-full bg-[#1A1A2E] text-white p-4 rounded-lg neon-border focus:outline-none transition duration-200 resize-none text-sm sm:text-base" 
+                    class="w-full input-box text-white p-4 rounded-lg neon-border-focus focus:outline-none transition duration-200 resize-none text-sm sm:text-base" 
                     placeholder=""></textarea>
             </div>
 
             <button 
-                id="obfuscate-btn" 
-                class="neon-btn w-full py-3 rounded-lg flex justify-center items-center space-x-2 text-base sm:text-lg"
-                onclick="gen_jso()">
-                <span id="button-text">GENERATE JSO</span>
-                <div id="loading-indicator" class="loading-spinner hidden"></div>
+                id="process-trigger-btn" 
+                class="neon-btn w-full py-3 rounded-lg flex justify-center items-center space-x-3 text-lg"
+                onclick="exec_vps_proc()">
+                <span id="trigger-text">GENERATE JSO PAYLOAD</span>
+                <div id="loader-icon" class="loading-spinner-styled hidden"></div>
             </button>
 
             <div>
-                <h2 class="text-xl font-bold mb-3 text-white neon-text-glow">JSO Output (Raw)</h2>
+                <h2 class="text-xl font-bold mb-3 neon-text-main">JSO Output (Encoded)</h2>
                 <div class="relative">
-                    <pre class="bg-[#1A1A2E] text-green-400 p-4 rounded-lg neon-border overflow-x-auto h-[16rem] relative">
-                        <code id="jso-output" class="text-sm">
-                        </code>
+                    <pre class="input-box text-green-400 p-4 rounded-lg neon-border-focus overflow-x-auto h-[16rem] relative">
+                        <code id="jso-result-area" class="text-sm"></code>
                     </pre>
                     <button 
-                        id="copy-btn" 
-                        class="absolute top-0 right-0 transition duration-150 text-xs sm:text-sm z-10 copy-btn-neon"
-                        onclick="copy_payload()"
+                        id="clip-copy-btn" 
+                        class="absolute top-0 right-0 transition duration-150 z-10 copy-btn-neon-mini"
+                        onclick="copy_final_output()"
                         disabled>
                         Copy
                     </button>
@@ -200,118 +246,123 @@ Developed by: Vulnsec Legion
             </div>
         </main>
 
-        <footer class="mt-10 pt-6 border-t border-gray-700 text-center text-sm text-gray-500">
+        <footer class="mt-12 pt-6 border-t border-gray-700/50 text-center text-sm text-gray-500">
             <p>Developed by: Vulnsec Legion</p>
-            <p class="mt-1 flex justify-center items-center space-x-2">
-                <span>Follow me on</span>
-                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-blue-400 hover:text-blue-300 transition duration-150 text-lg" aria-label="Follow Vulnsec Legion on Facebook">
+            <p class="mt-2 flex justify-center items-center space-x-2">
+                <span class="text-gray-400">Follow for updates</span>
+                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="footer-link hover:text-white transition duration-150 text-3xl" aria-label="Follow Vulnsec Legion on Facebook">
                     <i class="fab fa-facebook-square"></i>
                 </a>
             </p>
         </footer>
     </div>
 
-    <div id="toast-container">
-    </div>
+    <div id="toast-container"></div>
 
     <script>
-        const API_URL = '/api/obfuscate';
+        const API_ENDPOINT = '/api/obfuscate';
         
-        const HIN = document.getElementById('html-input');
-        const INP_DSC = document.getElementById('input-description');
-        const OBTN = document.getElementById('obfuscate-btn');
-        const JSOUT = document.getElementById('jso-output');
-        const CBTN = document.getElementById('copy-btn');
-        const BTEXT = document.getElementById('button-text');
-        const LIND = document.getElementById('loading-indicator');
-        const TCONT = document.getElementById('toast-container');
+        const input_box = document.getElementById('html-input-zone');
+        const floating_desc_el = document.getElementById('floating-desc-el');
+        const fire_btn = document.getElementById('process-trigger-btn');
+        const output_area = document.getElementById('jso-result-area');
+        const copy_btn = document.getElementById('clip-copy-btn');
+        const btn_label = document.getElementById('trigger-text');
+        const loader_spin = document.getElementById('loader-icon');
+        const global_toast = document.getElementById('toast-container');
+        
+        const DEFAULT_PROMPT = 'Paste your HTML code here!';
 
-        const DFT_TXT = 'Paste your HTML code here!';
-
-        function upd_inp() {
-            if (HIN.value.trim()) { INP_DSC.style.opacity = '0'; INP_DSC.textContent = ''; } 
-            else { INP_DSC.style.opacity = '1'; INP_DSC.textContent = DFT_TXT; }
+        function toggle_placeholder() {
+            if (input_box.value.trim()) { 
+                floating_desc_el.style.opacity = '0';
+                floating_desc_el.textContent = '';
+            } else { 
+                floating_desc_el.style.opacity = '1'; 
+                floating_desc_el.textContent = DEFAULT_PROMPT; 
+            }
         }
 
-        HIN.addEventListener('focus', () => { INP_DSC.style.opacity = '0'; });
-        HIN.addEventListener('blur', upd_inp);
-        HIN.addEventListener('input', upd_inp);
-        document.addEventListener('DOMContentLoaded', upd_inp);
+        input_box.addEventListener('focus', () => { floating_desc_el.style.opacity = '0'; });
+        input_box.addEventListener('blur', toggle_placeholder);
+        input_box.addEventListener('input', toggle_placeholder);
+        document.addEventListener('DOMContentLoaded', toggle_placeholder);
 
-        function show_t(msg, type = 'success', duration = 3000) {
-            const t = document.createElement('div');
-            t.className = `toast toast-${type}`;
-            t.textContent = msg;
-            TCONT.appendChild(t);
-            setTimeout(() => { t.classList.add('toast-visible'); }, 10); 
-            setTimeout(() => { t.classList.remove('toast-visible'); setTimeout(() => { t.remove(); }, 300); }, duration);
+
+        function display_sys_msg(msg, type = 'success', duration = 3000) {
+            const temp_div = document.createElement('div');
+            temp_div.className = `toast toast-${type}`;
+            temp_div.textContent = msg;
+            global_toast.appendChild(temp_div);
+            setTimeout(() => { temp_div.classList.add('toast-visible'); }, 10); 
+            setTimeout(() => { temp_div.classList.remove('toast-visible'); setTimeout(() => { temp_div.remove(); }, 300); }, duration);
         }
 
-        async function gen_jso() {
-            const html = HIN.value.trim();
-            JSOUT.textContent = '';
-            CBTN.disabled = true;
+        async function exec_vps_proc() {
+            const source_html = input_box.value.trim();
+            output_area.textContent = '';
+            copy_btn.disabled = true;
 
-            if (!html) { show_t('Paste HTML code first.', 'error'); return; }
+            if (!source_html) { 
+                display_sys_msg('Input field empty. Paste HTML code.', 'error'); 
+                return; 
+            }
 
-            BTEXT.textContent = 'WORKING...';
-            LIND.classList.remove('hidden');
-            OBTN.disabled = true;
+            btn_label.textContent = 'EXECUTING...';
+            loader_spin.classList.remove('hidden');
+            fire_btn.disabled = true;
 
             try {
-                const res = await fetch(API_URL, {
+                const api_response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ html: html })
+                    body: JSON.stringify({ html: source_html })
                 });
 
-                const result = await res.json();
+                const result_data = await api_response.json();
 
-                if (res.ok) {
-                    JSOUT.textContent = result.jso; 
-                    show_t('Payload generated successfully!', 'success');
-                    CBTN.disabled = false;
+                if (api_response.ok) {
+                    output_area.textContent = result_data.jso; 
+                    display_sys_msg('Payload generated successfully! Ready to use.', 'success');
+                    copy_btn.disabled = false;
                 } else {
-                    show_t(`API Error: ${result.error || 'Unknown error.'}`, 'error');
-                    JSOUT.textContent = '';
+                    display_sys_msg(`API Error: ${result_data.error || 'Server returned an unknown error.'}`, 'error');
+                    output_area.textContent = '';
                 }
             } catch (err) {
-                console.error('Fetch error:', err);
-                show_t('Connection failed. Server issue.', 'error');
-                JSOUT.textContent = '';
+                console.error('Network Error:', err);
+                display_sys_msg('Connection failed. Check server status.', 'error');
+                output_area.textContent = '';
             } finally {
-                BTEXT.textContent = 'GENERATE JSO';
-                LIND.classList.add('hidden');
-                OBTN.disabled = false;
+                btn_label.textContent = 'GENERATE JSO PAYLOAD';
+                loader_spin.classList.add('hidden');
+                fire_btn.disabled = false;
             }
         }
 
-        function copy_payload() {
-            const textToCopy = JSOUT.textContent;
-            if (!textToCopy) return;
+        async function copy_final_output() {
+            const data_to_copy = output_area.textContent;
+            if (!data_to_copy) return;
 
-            const tempInput = document.createElement('textarea');
-            tempInput.value = textToCopy;
-            tempInput.style.position = 'absolute';
-            tempInput.style.left = '-9999px';
-            document.body.appendChild(tempInput);
-
-            tempInput.focus();
-            tempInput.select();
-            
-            let successful = false;
             try {
-                successful = document.execCommand('copy');
+                await navigator.clipboard.writeText(data_to_copy);
+                display_sys_msg('Payload copied to clipboard!', 'success');
             } catch (err) {
-                console.error('Copy fail:', err);
-            } finally {
-                document.body.removeChild(tempInput);
-            }
-
-            if (successful) {
-                show_t('Payload copied to clipboard!', 'success');
-            } else {
-                show_t('Copy failed. Select text manually.', 'error', 4000);
+                const tempInput = document.createElement('textarea');
+                tempInput.value = data_to_copy;
+                tempInput.style.position = 'absolute';
+                tempInput.style.left = '-9999px';
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                
+                try {
+                    document.execCommand('copy');
+                    display_sys_msg('Payload copied (Fallback Mode)!', 'success');
+                } catch (e) {
+                    display_sys_msg('Copy failed. Select text manually.', 'error', 4000);
+                } finally {
+                    document.body.removeChild(tempInput);
+                }
             }
         }
     </script>
