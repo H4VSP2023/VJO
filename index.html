@@ -6,6 +6,7 @@
     <title>JSO Converter - Vulnsec Legion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Facebook Icon --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --neon-color: #00FFC2;
@@ -19,6 +20,8 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 1rem; /* Added padding to body for small screens */
+            position: relative; /* For toast positioning */
         }
         .neon-border {
             border: 2px solid var(--neon-color);
@@ -57,6 +60,10 @@
             color: #6B7280;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            max-width: calc(100% - 2rem); /* Ensure description doesn't overflow */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: pre-wrap; /* Allow example HTML to wrap */
         }
         .loading-spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
@@ -69,6 +76,50 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+        .toast {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 255, 194, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translateY(20px);
+            font-weight: 600;
+            text-align: center;
+            pointer-events: auto; /* Re-enable for the toast itself */
+            min-width: 250px;
+            max-width: 90%;
+            border: 1px solid var(--neon-color);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success { background-color: rgba(0, 128, 0, 0.8); border-color: #00FFC2; }
+        .toast.error { background-color: rgba(128, 0, 0, 0.8); border-color: #FF0000; }
+        .toast.info { background-color: rgba(0, 0, 128, 0.8); border-color: #00C2FF; }
+
+        /* Output area scrollable */
+        #jso-output-pre {
+            overflow-x: auto;
+            overflow-y: auto; /* Ensure vertical scroll too */
+            max-height: 20rem; /* Give it a max height to scroll if content is very long */
         }
     </style>
 </head>
@@ -84,8 +135,7 @@
         </header>
 
         <main class="space-y-8">
-            <!-- Input Section -->
-            <div class="input-group">
+            <!-- Input Section --><div class="input-group">
                 <p id="input-description" class="input-description text-sm sm:text-base">
                     Paste your HTML code here (e.g., &lt;!DOCTYPE html&gt;&lt;html&gt;...&lt;/html&gt;)
                 </p>
@@ -96,8 +146,7 @@
                     placeholder=""></textarea>
             </div>
 
-            <!-- Action Button -->
-            <button 
+            <!-- Action Button --><button 
                 id="obfuscate-btn" 
                 class="neon-btn w-full py-3 rounded-lg flex justify-center items-center space-x-2 text-base sm:text-lg"
                 onclick="handleObfuscate()">
@@ -105,69 +154,56 @@
                 <div id="loading-indicator" class="loading-spinner hidden"></div>
             </button>
 
-            <!-- Output Section -->
-            <div>
+            <!-- Output Section --><div>
                 <h2 class="text-xl font-bold mb-3 text-white neon-text-glow">Obfuscated Output (Ready to Inject)</h2>
                 <div class="relative">
-                    <pre class="bg-[#1A1A2E] text-green-400 p-4 rounded-lg neon-border overflow-x-auto min-h-[10rem] relative">
+                    <pre id="jso-output-pre" class="bg-[#1A1A2E] text-green-400 p-4 rounded-lg neon-border relative min-h-[10rem]">
                         <code id="jso-output" class="text-sm">
-                            <!-- Output will appear here -->
-                        </code>
-                        <div id="copy-message" class="absolute top-0 right-0 m-2 px-3 py-1 bg-green-500 text-white rounded-full text-xs opacity-0 transition-opacity duration-300">
-                            Copied!
-                        </div>
+                            <!-- Output will appear here --></code>
                     </pre>
                     <button 
                         id="copy-btn" 
-                        class="absolute top-2 right-2 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-150 text-xs sm:text-sm"
-                        onclick="copyToClipboard()"
-                        disabled>
+                        class="absolute top-2 right-2 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-150 text-xs sm:text-sm hidden"
+                        onclick="copyToClipboard()">
                         Copy
                     </button>
                 </div>
             </div>
 
-            <!-- Error/Status Message -->
-            <p id="status-message" class="text-center text-red-500 font-semibold"></p>
+            <!-- Error/Status Message - Now handled by toast --><!-- <p id="status-message" class="text-center text-red-500 font-semibold"></p> --></main>
 
-        </main>
-
-        <!-- Footer / Developer Info -->
-        <footer class="mt-10 pt-6 border-t border-gray-700 text-center text-sm text-gray-500">
+        <!-- Footer / Developer Info --><footer class="mt-10 pt-6 border-t border-gray-700 text-center text-sm text-gray-500">
             <p>Developed by: Vulnsec Legion</p>
-            <p class="mt-1">
-                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-blue-400 hover:text-blue-300 transition duration-150">
-                    Connect on Facebook
+            <p class="mt-1 flex justify-center items-center space-x-2">
+                <span>Follow me on</span>
+                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-blue-400 hover:text-blue-300 transition duration-150 text-lg">
+                    <i class="fab fa-facebook-square"></i>
                 </a>
             </p>
         </footer>
     </div>
 
-    <!-- JavaScript Logic -->
-    <script>
-        // Since app.py is now serving this file from the same domain (vjo.onrender.com), 
-        // we use a relative path for the API call.
+    <!-- Toast Container --><div id="toast-container"></div>
+
+    <!-- JavaScript Logic --><script>
         const BASE_API_PATH = '/api/obfuscate';
         
         const htmlInput = document.getElementById('html-input');
         const inputDescription = document.getElementById('input-description');
         const obfuscateBtn = document.getElementById('obfuscate-btn');
         const jsoOutput = document.getElementById('jso-output');
-        const statusMessage = document.getElementById('status-message');
         const copyBtn = document.getElementById('copy-btn');
         const buttonText = document.getElementById('button-text');
         const loadingIndicator = document.getElementById('loading-indicator');
-        const copyMessage = document.getElementById('copy-message');
+        const toastContainer = document.getElementById('toast-container');
 
-        // Initial state for the description (example HTML content)
-        const exampleHtml = '<!DOCTYPE html>\n<html>\n<head>\n  <title>Injected Page</title>\n</head>\n<body>\n  <h1>Hello, JSO!</h1>\n  <p>This content was loaded via eval(atob(...)).</p>\n  <script>console.log("Injected!");</scr' + 'ipt>\n</body>\n</html>';
+        const exampleHtml = '<!DOCTYPE html>\\n<html>\\n<head>\\n  <title>Injected Page</title>\\n</head>\\n<body>\\n  <h1>Hello, JSO!</h1>\\n  <p>This content was loaded via eval(atob(...)).</p>\\n  <script>console.log("Injected!");<\\/script>\\n</body>\\n</html>';
 
         // Set initial description
         if (!htmlInput.value) {
             inputDescription.innerHTML = exampleHtml;
         }
 
-        // Focus and Blur logic for the interactive description
         htmlInput.addEventListener('focus', () => {
             if (!htmlInput.value) {
                 inputDescription.style.opacity = '0';
@@ -177,7 +213,7 @@
         htmlInput.addEventListener('blur', () => {
             if (!htmlInput.value.trim()) {
                 inputDescription.style.opacity = '1';
-                htmlInput.value = ''; // Clear any remaining whitespace
+                htmlInput.value = '';
             }
         });
 
@@ -189,24 +225,39 @@
             }
         });
 
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            // Show toast
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10); // Small delay for CSS transition
+
+            // Hide and remove toast
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000); // Display for 3 seconds
+        }
+
         async function handleObfuscate() {
             const html = htmlInput.value.trim();
             jsoOutput.textContent = '';
-            statusMessage.textContent = '';
-            copyBtn.disabled = true;
+            copyBtn.classList.add('hidden'); // Hide copy button initially
 
             if (!html) {
-                statusMessage.textContent = 'Please paste HTML code into the input area.';
+                showToast('Please paste HTML code into the input area.', 'error');
                 return;
             }
 
-            // Show loading state
             buttonText.textContent = 'PROCESSING...';
             loadingIndicator.classList.remove('hidden');
             obfuscateBtn.disabled = true;
 
             try {
-                // Fetch using the relative path, which points to the same domain: https://vjo.onrender.com/api/obfuscate
                 const response = await fetch(BASE_API_PATH, {
                     method: 'POST',
                     headers: {
@@ -218,21 +269,19 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Wrap the output in script tags
                     const wrappedOutput = `<script>${result.jso}</scr` + `ipt>`;
                     jsoOutput.textContent = wrappedOutput;
-                    statusMessage.textContent = 'Successfully generated JSO payload!';
-                    copyBtn.disabled = false;
+                    showToast('Successfully generated JSO payload!', 'success');
+                    copyBtn.classList.remove('hidden'); // Show copy button
                 } else {
-                    statusMessage.textContent = `API Error: ${result.error || 'Unknown error occurred.'}`;
+                    showToast(`API Error: ${result.error || 'Unknown error occurred.'}`, 'error');
                     jsoOutput.textContent = '';
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
-                statusMessage.textContent = 'Connection failed. Check your server status.';
+                showToast('Connection failed. Please check your server status.', 'error');
                 jsoOutput.textContent = '';
             } finally {
-                // Restore button state
                 buttonText.textContent = 'GENERATE JSO';
                 loadingIndicator.classList.add('hidden');
                 obfuscateBtn.disabled = false;
@@ -241,24 +290,25 @@
 
         function copyToClipboard() {
             const textToCopy = jsoOutput.textContent;
-            if (!textToCopy) return;
+            if (!textToCopy) {
+                showToast('Nothing to copy!', 'info');
+                return;
+            }
 
-            // Use execCommand as it's more reliable in certain sandbox environments
-            const tempInput = document.createElement('textarea');
-            tempInput.value = textToCopy;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            tempTextArea.setSelectionRange(0, 99999); // For mobile devices
+
             try {
                 document.execCommand('copy');
-                copyMessage.style.opacity = '1';
-                setTimeout(() => {
-                    copyMessage.style.opacity = '0';
-                }, 1500);
+                showToast('Output copied to clipboard!', 'success');
             } catch (err) {
                 console.error('Could not copy text: ', err);
+                showToast('Failed to copy. Please copy manually.', 'error');
             } finally {
-                document.body.removeChild(tempInput);
+                document.body.removeChild(tempTextArea);
             }
         }
     </script>
