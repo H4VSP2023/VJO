@@ -6,20 +6,24 @@
     <title>JSO Converter - Vulnsec Legion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons (for Facebook logo) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --neon-color: #00FFC2;
             --dark-bg: #1A1A2E;
+            --output-bg: #1A1A2E; 
         }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--dark-bg);
             color: #E0E0E0;
             display: flex;
-            flex-direction: column; 
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 1rem;
+            position: relative; 
         }
         .neon-border {
             border: 2px solid var(--neon-color);
@@ -48,6 +52,22 @@
             box-shadow: 0 0 15px var(--neon-color);
             transform: translateY(-2px);
         }
+        .input-group {
+            position: relative;
+        }
+        /* Style for the example content inside the textarea before user input */
+        .input-description {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            right: 1rem;
+            color: #6B7280;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 0.875rem; /* text-sm */
+        }
         .loading-spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid var(--neon-color);
@@ -60,14 +80,42 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Ensure code content wraps correctly */
         #jso-output {
             display: block;
             word-break: break-all;
             white-space: pre-wrap;
         }
 
-        /* --- Toast Notification Styles --- */
+        /* --- Copy Button Styling FIX --- */
+        .copy-btn-neon {
+            border: 1px solid var(--neon-color); 
+            box-shadow: 0 0 4px var(--neon-color);
+            background-color: var(--output-bg);
+            color: var(--neon-color);
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-size: 0.75rem; 
+            /* Added margin-right and margin-top to position it correctly on the rounded corner edge */
+            margin-right: 8px;
+            margin-top: 8px; 
+        }
+        .copy-btn-neon:hover {
+            box-shadow: 0 0 8px var(--neon-color);
+            background-color: #282845;
+        }
+
+        /* --- Toast Notification Styles (Centered Bottom) --- */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50; 
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            gap: 0.5rem;
+        }
         .toast {
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
@@ -75,29 +123,28 @@
             font-weight: 600;
             opacity: 0;
             transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-            transform: translateX(100%);
+            transform: translateY(20px); 
             min-width: 250px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            max-width: 90vw;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            text-shadow: none; /* remove glow from toast text */
         }
         .toast-visible {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
+        /* Neon success message (matches your image) */
         .toast-success {
-            background-color: var(--neon-color); /* Bright neon color for success */
+            background-color: transparent; 
+            border: 1px solid var(--neon-color);
+            color: var(--neon-color);
+            font-weight: 400;
+            box-shadow: 0 0 10px var(--neon-color);
         }
         .toast-error {
-            background-color: #FF6B6B; /* Red for errors */
-        }
-
-        /* Style for the copy button border: smaller padding for tight fit */
-        .copy-btn-neon {
-            border: 1px solid var(--neon-color);
-            box-shadow: 0 0 4px var(--neon-color);
-            background-color: rgba(26, 26, 46, 0.8); /* Slightly transparent dark background */
-        }
-        .copy-btn-neon:hover {
-            box-shadow: 0 0 8px var(--neon-color);
+            background-color: #FF6B6B;
+            color: #1A1A2E;
         }
     </style>
 </head>
@@ -113,15 +160,17 @@
         </header>
 
         <main class="space-y-8">
-            <!-- Input Section - Description moved below -->
-            <div>
+            <!-- Input Section -->
+            <div class="input-group">
+                <!-- Description/Placeholder -->
+                <p id="input-description" class="input-description text-sm sm:text-base">
+                    Paste your HTML code here (e.g., &lt;!DOCTYPE html&gt;&lt;html&gt;...&lt;/html&gt;)
+                </p>
                 <textarea 
                     id="html-input" 
                     rows="10" 
                     class="w-full bg-[#1A1A2E] text-white p-4 rounded-lg neon-border focus:outline-none transition duration-200 resize-none text-sm sm:text-base" 
-                    placeholder='<!DOCTYPE html><html><head><title>Injected Page</title></head><body><h1>Hello World</h1></body></html>'></textarea>
-                <!-- New description below the input field -->
-                <p class="text-sm text-gray-400 mt-2">Paste the complete HTML structure you wish to obfuscate.</p>
+                    placeholder=""></textarea>
             </div>
 
             <!-- Action Button -->
@@ -135,22 +184,21 @@
 
             <!-- Output Section -->
             <div>
-                <!-- Updated Header -->
-                <h2 class="text-xl font-bold mb-3 text-white neon-text-glow">Obfuscated JSO Payload</h2>
+                <h2 class="text-xl font-bold mb-3 text-white neon-text-glow">Obfuscated Output (Ready to Inject)</h2>
                 <div class="relative">
-                    <pre class="bg-[#1A1A2E] text-green-400 p-4 rounded-lg neon-border overflow-x-auto min-h-[16rem] relative pt-12">
+                    <pre class="bg-[#1A1A2E] text-green-400 p-4 rounded-lg neon-border overflow-x-auto min-h-[16rem] relative">
                         <code id="jso-output" class="text-sm">
-                            <!-- Raw JSO output will appear here -->
+                            <!-- Output will appear here -->
                         </code>
-                        <!-- Copy Button: Reduced padding to make the border tighter -->
-                        <button 
-                            id="copy-btn" 
-                            class="absolute top-2 right-2 px-2 py-1 text-white rounded-lg transition duration-150 text-xs sm:text-sm z-10 copy-btn-neon"
-                            onclick="copyToClipboard()"
-                            disabled>
-                            Copy
-                        </button>
                     </pre>
+                    <!-- Copy Button: Uses the final, minimal neon style -->
+                    <button 
+                        id="copy-btn" 
+                        class="absolute top-0 right-0 transition duration-150 text-xs sm:text-sm z-10 copy-btn-neon"
+                        onclick="copyToClipboard()"
+                        disabled>
+                        Copy
+                    </button>
                 </div>
             </div>
         </main>
@@ -158,16 +206,17 @@
         <!-- Footer / Developer Info -->
         <footer class="mt-10 pt-6 border-t border-gray-700 text-center text-sm text-gray-500">
             <p>Developed by: Vulnsec Legion</p>
-            <p class="mt-1">
-                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-blue-400 hover:text-blue-300 transition duration-150">
-                    Connect on Facebook
+            <p class="mt-1 flex justify-center items-center space-x-2">
+                <span>Follow me on</span>
+                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-blue-400 hover:text-blue-300 transition duration-150 text-lg" aria-label="Follow Vulnsec Legion on Facebook">
+                    <i class="fab fa-facebook-square"></i>
                 </a>
             </p>
         </footer>
     </div>
 
-    <!-- Toast Notification Container (Fixed position at bottom right) -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2">
+    <!-- Toast Notification Container (Fixed position at bottom center) -->
+    <div id="toast-container">
         <!-- Toast elements will be injected here by JavaScript -->
     </div>
 
@@ -176,12 +225,44 @@
         const BASE_API_PATH = '/api/obfuscate';
         
         const htmlInput = document.getElementById('html-input');
+        const inputDescription = document.getElementById('input-description');
         const obfuscateBtn = document.getElementById('obfuscate-btn');
         const jsoOutput = document.getElementById('jso-output');
         const copyBtn = document.getElementById('copy-btn');
         const buttonText = document.getElementById('button-text');
         const loadingIndicator = document.getElementById('loading-indicator');
         const toastContainer = document.getElementById('toast-container');
+
+        // --- Input Placeholder/Description Logic ---
+        const initialDescriptionText = 'Paste your HTML code here (e.g., <!DOCTYPE html><html>...</html>)';
+
+        // Function to update the description based on input focus/value
+        function updateInputDescription() {
+            if (htmlInput.value.trim()) {
+                inputDescription.style.opacity = '0';
+                inputDescription.textContent = ''; // Clear text when there is content
+            } else {
+                inputDescription.style.opacity = '1';
+                inputDescription.textContent = initialDescriptionText; // Restore initial text when empty
+            }
+        }
+
+        // Set up event listeners for input field
+        htmlInput.addEventListener('focus', () => {
+             inputDescription.style.opacity = '0';
+        });
+
+        htmlInput.addEventListener('blur', () => {
+            updateInputDescription();
+        });
+
+        htmlInput.addEventListener('input', () => {
+            updateInputDescription();
+        });
+
+        // Initialize description state on load
+        document.addEventListener('DOMContentLoaded', updateInputDescription);
+
 
         // --- Toast Notification Functions ---
         function showToast(message, type = 'success', duration = 3000) {
@@ -191,21 +272,19 @@
             
             toastContainer.appendChild(toast);
 
-            // Trigger animation
             setTimeout(() => {
                 toast.classList.add('toast-visible');
-            }, 10); // Small delay to allow CSS properties to register
+            }, 10); 
 
-            // Hide and remove after duration
             setTimeout(() => {
                 toast.classList.remove('toast-visible');
-                // Remove from DOM after transition completes (0.3s)
                 setTimeout(() => {
                     toast.remove();
                 }, 300); 
             }, duration);
         }
 
+        // --- Main Obfuscation Logic ---
         async function handleObfuscate() {
             const html = htmlInput.value.trim();
             jsoOutput.textContent = '';
@@ -233,9 +312,10 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    // *** CRITICAL CHANGE: Output the raw JSO string only, no <script> tags. ***
-                    jsoOutput.textContent = result.jso;
-                    showToast('JSO payload generated successfully!', 'success');
+                    // Wrap the output in script tags
+                    const wrappedOutput = `<script>${result.jso}</scr` + `ipt>`;
+                    jsoOutput.textContent = wrappedOutput;
+                    showToast('Successfully generated JSO payload!', 'success');
                     copyBtn.disabled = false;
                 } else {
                     showToast(`API Error: ${result.error || 'Unknown error occurred.'}`, 'error');
@@ -253,24 +333,23 @@
             }
         }
 
+        // --- Copy Logic ---
         function copyToClipboard() {
             const textToCopy = jsoOutput.textContent;
             if (!textToCopy) return;
 
-            // Create a temporary, hidden textarea element
+            // Use execCommand for better compatibility in iframes
             const tempInput = document.createElement('textarea');
             tempInput.value = textToCopy;
             tempInput.style.position = 'absolute';
             tempInput.style.left = '-9999px';
             document.body.appendChild(tempInput);
 
-            // Select the text and execute the copy command
             tempInput.focus();
             tempInput.select();
             
             let successful = false;
             try {
-                // Use execCommand as it's more reliable in iframes
                 successful = document.execCommand('copy');
             } catch (err) {
                 console.error('Could not copy text: ', err);
@@ -279,7 +358,7 @@
             }
 
             if (successful) {
-                showToast('JSO payload copied to clipboard!', 'success');
+                showToast('Payload copied to clipboard!', 'success');
             } else {
                 showToast('Copy failed. Please select the text manually.', 'error', 4000);
             }
