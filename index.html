@@ -54,11 +54,10 @@
             position: absolute;
             top: 1rem;
             left: 1rem;
-            color: #6B7280; /* Gray color for description */
-            pointer-events: none; /* Allows clicks to pass through to the textarea */
+            color: #6B7280;
+            pointer-events: none;
             transition: opacity 0.3s ease;
         }
-        /* Custom loading spinner */
         .loading-spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid var(--neon-color);
@@ -146,8 +145,9 @@
 
     <!-- JavaScript Logic -->
     <script>
-        // --- IMPORTANT: REPLACE THIS PLACEHOLDER WITH YOUR ACTUAL RENDER URL ---
-        const BASE_URL = 'https://vjo.onrender.com'; 
+        // Since app.py is now serving this file from the same domain (vjo.onrender.com), 
+        // we use a relative path for the API call.
+        const BASE_API_PATH = '/api/obfuscate';
         
         const htmlInput = document.getElementById('html-input');
         const inputDescription = document.getElementById('input-description');
@@ -206,7 +206,8 @@
             obfuscateBtn.disabled = true;
 
             try {
-                const response = await fetch(`${BASE_URL}/api/obfuscate`, {
+                // Fetch using the relative path, which points to the same domain: https://vjo.onrender.com/api/obfuscate
+                const response = await fetch(BASE_API_PATH, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -228,7 +229,7 @@
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
-                statusMessage.textContent = 'Connection failed. Check your BASE_URL and server status.';
+                statusMessage.textContent = 'Connection failed. Check your server status.';
                 jsoOutput.textContent = '';
             } finally {
                 // Restore button state
