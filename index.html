@@ -3,13 +3,15 @@
 ░█░█░█▀▀░█▀█░░░░░▀▀█░█▀▀░█▀█
 ░▀▄▀░▀▀█░█▀▀░▄▄▄░░░█░▀▀█░█░█
 ░░▀░░▀▀▀░▀░░░░░░░▀▀░░▀▀▀░▀▀▀
-   Developed by: Vulnsec Legion
+Developed by: Vulnsec Legion
 --->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VSP-JSO Converter - Vulnsec Legion</title>
+    <link rel="icon" href="https://i.imgur.com/mrwDPlj.png" type="image/png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -72,24 +74,21 @@
             word-break: break-all;
             font-size: 0.875rem;
         }
-        /* --- VISIBLE LOADING SPINNER FIX --- */
         .loading-spinner {
-            border: 6px solid #33334F; /* Dark background color for the visible ring */
+            border: 6px solid #33334F;
             border-top: 6px solid var(--neon-color);
             border-radius: 50%;
-            width: 2rem; /* Increased size */
-            height: 2rem; /* Increased size */
+            width: 2rem;
+            height: 2rem;
             animation: spin 0.8s linear infinite;
-            box-shadow: 0 0 8px var(--neon-color); /* Added neon glow */
+            box-shadow: 0 0 8px var(--neon-color);
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* --- OUTPUT SCROLL FIX --- */
         #jso-output {
             display: block;
-            /* Prevents lines from wrapping, forcing horizontal scroll */
             word-break: normal;
             white-space: pre; 
         }
@@ -156,6 +155,7 @@
     <div class="w-full max-w-4xl bg-[#0F0F1A] p-6 sm:p-10 rounded-xl shadow-2xl neon-border">
         
         <header class="text-center mb-10">
+            <!-- Main Title is here -->
             <h1 class="text-3xl sm:text-4xl font-extrabold text-white neon-text-glow tracking-wider">
                 VSP-JSO
             </h1>
