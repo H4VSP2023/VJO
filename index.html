@@ -3,324 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSO Obfuscator | Vulnsec Legion</title>
-    <!-- Load Tailwind CSS -->
+    <title>JSO Converter - Vulnsec Legion</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Define a custom neon-like color palette */
         :root {
-            --neon-blue: #00dfff; /* Primary Accent */
-            --glow-color: #0080ff; /* Subtle Glow */
-            --dark-bg: #030712; /* Extreme Dark Background */
+            --neon-color: #00FFC2;
+            --dark-bg: #1A1A2E;
         }
-        /* Custom Tailwind Configuration */
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': 'var(--neon-blue)',
-                        'dark-bg': 'var(--dark-bg)',
-                    },
-                    boxShadow: {
-                        // Stronger, more vibrant glow effect
-                        'neon-glow': '0 0 10px var(--glow-color), 0 0 20px var(--neon-blue), 0 0 30px var(--neon-blue)',
-                    },
-                    animation: {
-                        'pulse-glow': 'pulse-glow 3s infinite alternate',
-                    },
-                    keyframes: {
-                        'pulse-glow': {
-                            '0%': { boxShadow: '0 0 5px var(--glow-color)' },
-                            '100%': { boxShadow: '0 0 15px var(--neon-blue), 0 0 25px rgba(0, 223, 255, 0.4)' },
-                        }
-                    }
-                },
-            },
-        };
-        /* Custom scrollbar styling for textareas */
-        textarea::-webkit-scrollbar {
-            width: 8px;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: #E0E0E0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        textarea::-webkit-scrollbar-thumb {
-            background-color: var(--neon-blue);
-            border-radius: 4px;
+        .neon-border {
+            border: 2px solid var(--neon-color);
+            box-shadow: 
+                0 0 10px var(--neon-color),
+                0 0 20px rgba(0, 255, 194, 0.4);
+            transition: all 0.3s ease-in-out;
         }
-        textarea::-webkit-scrollbar-track {
-            background-color: #1f2937; /* Dark track */
+        .neon-border:hover {
+            box-shadow: 
+                0 0 15px var(--neon-color),
+                0 0 30px rgba(0, 255, 194, 0.6);
         }
-        /* Style for the button background (dark to primary gradient) */
-        #convert-button {
-            background-image: linear-gradient(45deg, #0f172a, var(--neon-blue));
+        .neon-text-glow {
+            text-shadow: 
+                0 0 5px var(--neon-color),
+                0 0 10px rgba(0, 255, 194, 0.5);
+        }
+        .neon-btn {
+            background-color: var(--neon-color);
+            color: #1A1A2E;
+            font-weight: 800;
+            transition: all 0.2s;
+        }
+        .neon-btn:hover {
+            box-shadow: 0 0 15px var(--neon-color);
+            transform: translateY(-2px);
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-description {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: #6B7280; /* Gray color for description */
+            pointer-events: none; /* Allows clicks to pass through to the textarea */
+            transition: opacity 0.3s ease;
+        }
+        /* Custom loading spinner */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--neon-color);
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-dark-bg min-h-screen p-4 font-sans text-gray-100 flex flex-col items-center">
+<body class="p-4 sm:p-8">
 
-    <div class="max-w-4xl w-full mx-auto my-8">
-        <!-- Header -->
-        <header class="text-center mb-12">
-            <h1 class="text-6xl font-extrabold mb-3 tracking-tighter text-white drop-shadow-lg">
-                JSO Converter
+    <div class="w-full max-w-4xl bg-[#0F0F1A] p-6 sm:p-10 rounded-xl shadow-2xl neon-border">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-white neon-text-glow tracking-wider">
+                JSO HTML Obfuscator
             </h1>
-            <p class="text-xl text-primary font-light tracking-wide animate-pulse-slow">
-                &gt; Securely Obfuscate HTML into `eval(atob())`
-            </p>
+            <p class="text-sm sm:text-lg text-gray-400 mt-2">Convert your HTML into a single, executed JavaScript payload (`eval(atob())`).</p>
         </header>
 
-        <!-- Main Conversion Card -->
-        <div class="bg-gray-900 p-6 sm:p-10 rounded-xl border border-primary/50 shadow-neon-glow transition-all duration-500">
-            
-            <div id="status-message" class="hidden p-3 mb-4 rounded-lg text-sm font-medium transition-all duration-300"></div>
-
+        <main class="space-y-8">
             <!-- Input Section -->
-            <div class="mb-8">
-                <label for="html-input" class="block text-lg font-mono mb-2 text-white flex items-center">
-                    <i data-lucide="code" class="w-5 h-5 mr-2 text-primary"></i>
-                    Input Code (HTML, CSS, JS)
-                </label>
-                <textarea
-                    id="html-input"
-                    rows="10"
-                    placeholder="Paste your raw HTML/CSS/JS here..."
-                    class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:ring-primary/80 focus:border-primary/80 transition-all duration-300 text-white text-sm resize-none focus:shadow-md focus:shadow-primary/30"
-                ></textarea>
+            <div class="input-group">
+                <p id="input-description" class="input-description text-sm sm:text-base">
+                    Paste your HTML code here (e.g., &lt;!DOCTYPE html&gt;&lt;html&gt;...&lt;/html&gt;)
+                </p>
+                <textarea 
+                    id="html-input" 
+                    rows="10" 
+                    class="w-full bg-[#1A1A2E] text-white p-4 rounded-lg neon-border focus:outline-none transition duration-200 resize-none text-sm sm:text-base" 
+                    placeholder=""></textarea>
             </div>
 
             <!-- Action Button -->
-            <div class="flex justify-center mb-10">
-                <button
-                    id="convert-button"
-                    onclick="convertHtml()"
-                    class="flex items-center justify-center px-10 py-4 text-xl font-extrabold text-gray-100 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-primary"
-                    style="background-color: var(--neon-blue); color: var(--dark-bg); box-shadow: 0 0 15px rgba(0, 223, 255, 0.7);"
-                >
-                    <i data-lucide="zap" class="w-6 h-6 mr-3"></i>
-                    <span id="button-text">CONVERT NOW</span>
-                </button>
-            </div>
+            <button 
+                id="obfuscate-btn" 
+                class="neon-btn w-full py-3 rounded-lg flex justify-center items-center space-x-2 text-base sm:text-lg"
+                onclick="handleObfuscate()">
+                <span id="button-text">GENERATE JSO</span>
+                <div id="loading-indicator" class="loading-spinner hidden"></div>
+            </button>
 
             <!-- Output Section -->
             <div>
-                <label for="jso-output" class="block text-lg font-mono mb-2 text-white flex items-center">
-                    <i data-lucide="lock" class="w-5 h-5 mr-2 text-primary"></i>
-                    Obfuscated JSO Output
-                </label>
+                <h2 class="text-xl font-bold mb-3 text-white neon-text-glow">Obfuscated Output (Ready to Inject)</h2>
                 <div class="relative">
-                    <textarea
-                        id="jso-output"
-                        rows="6"
-                        readonly
-                        placeholder="// Output will appear here. Copy and inject this script into your HTML."
-                        class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm resize-none cursor-text"
-                    ></textarea>
-                    
-                    <button
-                        id="copy-button"
+                    <pre class="bg-[#1A1A2E] text-green-400 p-4 rounded-lg neon-border overflow-x-auto min-h-[10rem] relative">
+                        <code id="jso-output" class="text-sm">
+                            <!-- Output will appear here -->
+                        </code>
+                        <div id="copy-message" class="absolute top-0 right-0 m-2 px-3 py-1 bg-green-500 text-white rounded-full text-xs opacity-0 transition-opacity duration-300">
+                            Copied!
+                        </div>
+                    </pre>
+                    <button 
+                        id="copy-btn" 
+                        class="absolute top-2 right-2 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-150 text-xs sm:text-sm"
                         onclick="copyToClipboard()"
-                        class="absolute top-2 right-2 p-2 bg-gray-700 text-primary rounded-lg transition-all duration-200 hover:bg-primary hover:text-gray-900 focus:outline-none disabled:opacity-50"
-                        title="Copy to Clipboard"
-                        disabled
-                    >
-                        <i data-lucide="copy" class="w-5 h-5"></i>
+                        disabled>
+                        Copy
                     </button>
-                    <span id="copy-feedback" class="absolute right-14 top-3 text-xs text-primary bg-gray-900 border border-primary/50 px-2 py-1 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none">Copied!</span>
                 </div>
             </div>
 
-        </div>
+            <!-- Error/Status Message -->
+            <p id="status-message" class="text-center text-red-500 font-semibold"></p>
 
-        <!-- Footer / Branding -->
-        <footer class="text-center mt-12 text-gray-500">
-            <p class="text-sm font-mono tracking-wider">
-                Developed by: <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-primary/90 hover:text-primary transition-colors duration-200 font-bold underline-offset-4 hover:underline">Vulnsec Legion</a>
-            </p>
-            <div class="mt-2 flex justify-center space-x-3">
-                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" title="Vulnsec Legion Facebook">
-                    <svg class="w-7 h-7 text-primary/80 hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" />
-                    </svg>
+        </main>
+
+        <!-- Footer / Developer Info -->
+        <footer class="mt-10 pt-6 border-t border-gray-700 text-center text-sm text-gray-500">
+            <p>Developed by: Vulnsec Legion</p>
+            <p class="mt-1">
+                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="text-blue-400 hover:text-blue-300 transition duration-150">
+                    Connect on Facebook
                 </a>
-            </div>
+            </p>
         </footer>
-
     </div>
 
     <!-- JavaScript Logic -->
     <script>
-        // NOTE: Ensure your Python Flask app is running at this URL.
-        const BASE_URL = 'http://127.0.0.1:5000'; 
+        // --- IMPORTANT: REPLACE THIS PLACEHOLDER WITH YOUR ACTUAL RENDER URL ---
+        const BASE_URL = 'https://YOUR-RENDER-APP-URL-HERE.onrender.com'; 
         
         const htmlInput = document.getElementById('html-input');
+        const inputDescription = document.getElementById('input-description');
+        const obfuscateBtn = document.getElementById('obfuscate-btn');
         const jsoOutput = document.getElementById('jso-output');
-        const convertButton = document.getElementById('convert-button');
-        const copyButton = document.getElementById('copy-button');
-        const buttonText = document.getElementById('button-text');
         const statusMessage = document.getElementById('status-message');
-        const copyFeedback = document.getElementById('copy-feedback');
+        const copyBtn = document.getElementById('copy-btn');
+        const buttonText = document.getElementById('button-text');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const copyMessage = document.getElementById('copy-message');
 
-        // The default example content that should disappear on focus
-        const EXAMPLE_HTML = 
-`<div style="background-color: #1f2937; color: #fff; padding: 25px; border-radius: 8px; font-family: sans-serif;">
-  <!-- This is a sample comment that will be removed by the minifier -->
-  <h1 style="font-size: 1.5rem; border-bottom: 2px solid #00dfff; padding-bottom: 5px;">Secure Document Write</h1>
-  <p style="margin-top: 10px;">This entire block, including styles and comments, will be minified, base64 encoded, and wrapped in an 'eval(atob())' payload for maximum obscurity.</p>
-</div>`;
+        // Initial state for the description (example HTML content)
+        const exampleHtml = '<!DOCTYPE html>\n<html>\n<head>\n  <title>Injected Page</title>\n</head>\n<body>\n  <h1>Hello, JSO!</h1>\n  <p>This content was loaded via eval(atob(...)).</p>\n  <script>console.log("Injected!");</scr' + 'ipt>\n</body>\n</html>';
 
-        // --- Interactive Placeholder Logic ---
-        function setInitialContent() {
-            htmlInput.value = EXAMPLE_HTML;
-            htmlInput.classList.add('text-gray-400', 'italic');
+        // Set initial description
+        if (!htmlInput.value) {
+            inputDescription.innerHTML = exampleHtml;
         }
 
+        // Focus and Blur logic for the interactive description
         htmlInput.addEventListener('focus', () => {
-            if (htmlInput.value === EXAMPLE_HTML) {
-                htmlInput.value = '';
-                htmlInput.classList.remove('text-gray-400', 'italic');
+            if (!htmlInput.value) {
+                inputDescription.style.opacity = '0';
             }
         });
 
         htmlInput.addEventListener('blur', () => {
             if (!htmlInput.value.trim()) {
-                setInitialContent();
+                inputDescription.style.opacity = '1';
+                htmlInput.value = ''; // Clear any remaining whitespace
             }
         });
 
-        // --- General UI and Conversion Logic ---
-
-        function displayStatus(message, type = 'success') {
-            statusMessage.textContent = message;
-            statusMessage.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'text-white', 'bg-yellow-500');
-
-            if (type === 'error') {
-                statusMessage.classList.add('bg-red-600', 'text-white');
-            } else if (type === 'warning') {
-                statusMessage.classList.add('bg-yellow-600', 'text-white');
+        htmlInput.addEventListener('input', () => {
+            if (htmlInput.value.trim()) {
+                inputDescription.style.opacity = '0';
             } else {
-                statusMessage.classList.add('bg-green-600', 'text-white');
+                inputDescription.style.opacity = '1';
             }
-            
-            // Hide after 5 seconds
-            setTimeout(() => {
-                statusMessage.classList.add('hidden');
-            }, 5000);
-        }
+        });
 
-        async function convertHtml() {
-            let html = htmlInput.value;
-            // Clear the example content if it was still active upon pressing convert
-            if (html.trim() === EXAMPLE_HTML.trim()) {
-                html = '';
-            }
+        async function handleObfuscate() {
+            const html = htmlInput.value.trim();
+            jsoOutput.textContent = '';
+            statusMessage.textContent = '';
+            copyBtn.disabled = true;
 
-            jsoOutput.value = ''; 
-            copyButton.disabled = true;
-            statusMessage.classList.add('hidden'); 
-
-            if (!html.trim()) {
-                displayStatus('Please paste your actual HTML content to obfuscate.', 'warning');
+            if (!html) {
+                statusMessage.textContent = 'Please paste HTML code into the input area.';
                 return;
             }
 
-            // Set Loading State
-            convertButton.disabled = true;
-            buttonText.textContent = 'EXECUTING...';
-            // Simple spinner replacement
-            const zapIcon = convertButton.querySelector('[data-lucide="zap"]');
-            if (zapIcon) {
-                zapIcon.outerHTML = '<svg class="w-6 h-6 mr-3 animate-spin text-dark-bg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z" fill="currentColor"/></svg>';
-            }
+            // Show loading state
+            buttonText.textContent = 'PROCESSING...';
+            loadingIndicator.classList.remove('hidden');
+            obfuscateBtn.disabled = true;
 
             try {
-                // Exponential Backoff for Fetch
-                let response;
-                let lastError = null;
-                const maxRetries = 3;
+                const response = await fetch(`${BASE_URL}/api/obfuscate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ html: html })
+                });
 
-                for (let i = 0; i < maxRetries; i++) {
-                    const delay = Math.pow(2, i) * 500; // 0.5s, 1s, 2s
-                    await new Promise(resolve => setTimeout(resolve, delay));
-
-                    try {
-                        response = await fetch(`${BASE_URL}/api/obfuscate`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ html: html }),
-                        });
-
-                        if (response.ok) {
-                            break; 
-                        } else {
-                            lastError = await response.json().catch(() => ({ error: 'Server returned error status.' }));
-                            if (i === maxRetries - 1) throw new Error(lastError.error || 'Server error.');
-                        }
-                    } catch (err) {
-                        lastError = err;
-                        if (i === maxRetries - 1) throw err;
-                    }
-                }
-                
                 const result = await response.json();
 
-                if (result.jso) {
-                    jsoOutput.value = `<script>${result.jso}<\/script>`; // Added script tags for convenience
-                    copyButton.disabled = false;
-                    displayStatus('Conversion successful! JSO output is ready to inject.', 'success');
-                } else if (result.error) {
-                    throw new Error(result.error);
+                if (response.ok) {
+                    // Wrap the output in script tags
+                    const wrappedOutput = `<script>${result.jso}</scr` + `ipt>`;
+                    jsoOutput.textContent = wrappedOutput;
+                    statusMessage.textContent = 'Successfully generated JSO payload!';
+                    copyBtn.disabled = false;
                 } else {
-                    throw new Error('Conversion failed: Unexpected server response format.');
+                    statusMessage.textContent = `API Error: ${result.error || 'Unknown error occurred.'}`;
+                    jsoOutput.textContent = '';
                 }
-
             } catch (error) {
-                console.error("Conversion Error:", error);
-                displayStatus(`Error: ${error.message}. Check server connection/logs.`, 'error');
-                jsoOutput.value = `// Error: ${error.message}`;
+                console.error('Fetch error:', error);
+                statusMessage.textContent = 'Connection failed. Check your BASE_URL and server status.';
+                jsoOutput.textContent = '';
             } finally {
-                // Reset State
-                convertButton.disabled = false;
-                buttonText.textContent = 'CONVERT NOW';
-                // Restore Lucide icon
-                const spinnerIcon = convertButton.querySelector('svg');
-                if (spinnerIcon) {
-                    spinnerIcon.outerHTML = '<i data-lucide="zap" class="w-6 h-6 mr-3"></i>';
-                    lucide.createIcons(); // Re-render
-                }
+                // Restore button state
+                buttonText.textContent = 'GENERATE JSO';
+                loadingIndicator.classList.add('hidden');
+                obfuscateBtn.disabled = false;
             }
         }
 
-        // --- Clipboard Logic ---
         function copyToClipboard() {
-            try {
-                jsoOutput.select();
-                jsoOutput.setSelectionRange(0, 99999); 
+            const textToCopy = jsoOutput.textContent;
+            if (!textToCopy) return;
 
-                const successful = document.execCommand('copy');
-                
-                if (successful) {
-                    // Show "Copied!" feedback
-                    copyFeedback.classList.remove('opacity-0');
-                    copyFeedback.classList.add('opacity-100');
-                    setTimeout(() => {
-                        copyFeedback.classList.remove('opacity-100');
-                        copyFeedback.classList.add('opacity-0');
-                    }, 2000);
-                } else {
-                    displayStatus('Copying failed (browser restriction). Please copy manually.', 'error');
-                }
+            // Use execCommand as it's more reliable in certain sandbox environments
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            
+            try {
+                document.execCommand('copy');
+                copyMessage.style.opacity = '1';
+                setTimeout(() => {
+                    copyMessage.style.opacity = '0';
+                }, 1500);
             } catch (err) {
-                console.error('Copy error:', err);
-                displayStatus('Copying failed.', 'error');
+                console.error('Could not copy text: ', err);
+            } finally {
+                document.body.removeChild(tempInput);
             }
         }
-
-        // Initialize on page load
-        window.onload = function() {
-            lucide.createIcons();
-            setInitialContent(); // Set the initial example content
-        };
-
     </script>
 </body>
 </html>
