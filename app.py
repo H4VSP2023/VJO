@@ -1,6 +1,7 @@
 import re
 import base64
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 def tiny_minify(html: str) -> str:
@@ -58,4 +59,4 @@ def obfuscate_endpoint():
 
 @app.route('/')
 def index():
-    return "JSO API Operational.", 200
+    return send_file(os.path.join(app.root_path, 'index.html'))
