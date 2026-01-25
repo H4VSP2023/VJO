@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!---
+░█░█░█▀▀░█▀█░░░░░▀▀█░█▀▀░█▀█
+░▀▄▀░▀▀█░█▀▀░▄▄▄░░░█░▀▀█░█░█
+░░▀░░▀▀▀░▀░░░░░░░▀▀░░▀▀▀░▀▀▀
+Developed by: Vulnsec Legion
+--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -27,14 +33,13 @@
             min-height: 100vh;
             padding: 1.5rem;
             position: relative; 
-            overflow-x: hidden; /* Prevent horizontal scroll when drawer is hidden */
+            overflow-x: hidden;
         }
 
-        /* --- DRAWER STYLES --- */
-        #side-drawer {
+        #k9_x1 {
             position: fixed;
             top: 0;
-            left: -320px; /* Hidden by default */
+            left: -320px;
             width: 300px;
             height: 100%;
             background-color: var(--card-bg);
@@ -44,10 +49,10 @@
             padding: 2rem;
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
-        #side-drawer.open {
+        #k9_x1.open {
             left: 0;
         }
-        #drawer-overlay {
+        #m2_z4 {
             position: fixed;
             top: 0;
             left: 0;
@@ -58,7 +63,7 @@
             z-index: 90;
             backdrop-filter: blur(4px);
         }
-        .drawer-toggle-btn {
+        .v6_l2 {
             position: fixed;
             top: 20px;
             left: 20px;
@@ -72,7 +77,6 @@
             border: 1px solid rgba(0, 255, 194, 0.3);
             box-shadow: 0 0 10px rgba(0, 255, 194, 0.2);
         }
-        /* --------------------- */
 
         .app-card {
             background-color: var(--card-bg);
@@ -236,16 +240,16 @@
 </head>
 <body class="p-4 sm:p-8">
 
-    <div class="drawer-toggle-btn" onclick="t_drw()">
+    <div class="v6_l2" onclick="f5_a9()">
         <i class="fas fa-bars"></i>
     </div>
 
-    <div id="drawer-overlay" onclick="t_drw()"></div>
+    <div id="m2_z4" onclick="f5_a9()"></div>
 
-    <div id="side-drawer">
+    <div id="k9_x1">
         <div class="flex justify-between items-center mb-10">
             <h2 class="text-2xl font-extrabold neon-text-main">VSP-JSO</h2>
-            <i class="fas fa-times text-gray-400 cursor-pointer hover:text-white transition" onclick="t_drw()"></i>
+            <i class="fas fa-times text-gray-400 cursor-pointer hover:text-white transition" onclick="f5_a9()"></i>
         </div>
 
         <div class="space-y-10">
@@ -302,7 +306,7 @@
             <button 
                 id="process-trigger-btn" 
                 class="neon-btn w-full py-3 rounded-lg flex justify-center items-center space-x-3 text-lg"
-                onclick="p_run()">
+                onclick="q1_v8()">
                 <span id="trigger-text">GENERATE JSO PAYLOAD</span>
                 <div id="loader-icon" class="loading-spinner-styled hidden"></div>
             </button>
@@ -316,7 +320,7 @@
                     <button 
                         id="clip-copy-btn" 
                         class="absolute top-0 right-0 transition duration-150 z-10 copy-btn-neon-mini"
-                        onclick="c_clp()"
+                        onclick="r4_n2()"
                         disabled>
                         Copy
                     </button>
@@ -338,122 +342,119 @@
     <div id="toast-container"></div>
 
     <script>
-        // --- DRAWER SCRIPT ---
-        function t_drw() {
-            const d = document.getElementById('side-drawer');
-            const o = document.getElementById('drawer-overlay');
-            if (d.classList.contains('open')) {
-                d.classList.remove('open');
-                o.style.display = 'none';
+        function f5_a9() {
+            const h2 = document.getElementById('k9_x1');
+            const g7 = document.getElementById('m2_z4');
+            if (h2.classList.contains('open')) {
+                h2.classList.remove('open');
+                g7.style.display = 'none';
             } else {
-                d.classList.add('open');
-                o.style.display = 'block';
+                h2.classList.add('open');
+                g7.style.display = 'block';
             }
         }
-        // ---------------------
 
-        const s_api = '/api/obfuscate';
+        const b1 = '/api/obfuscate';
         
-        const el_i = document.getElementById('html-input-zone');
-        const el_d = document.getElementById('floating-desc-el');
-        const el_b = document.getElementById('process-trigger-btn');
-        const el_o = document.getElementById('jso-result-area');
-        const el_c = document.getElementById('clip-copy-btn');
-        const el_t = document.getElementById('trigger-text');
-        const el_l = document.getElementById('loader-icon');
-        const el_g = document.getElementById('toast-container');
+        const c3 = document.getElementById('html-input-zone');
+        const d4 = document.getElementById('floating-desc-el');
+        const e5 = document.getElementById('process-trigger-btn');
+        const f6 = document.getElementById('jso-result-area');
+        const g7 = document.getElementById('clip-copy-btn');
+        const h8 = document.getElementById('trigger-text');
+        const i9 = document.getElementById('loader-icon');
+        const j0 = document.getElementById('toast-container');
         
-        const c_dpt = 'Paste your HTML code here!';
+        const k1 = 'Paste your HTML code here!';
 
-        function h_pd() {
-            if (el_i.value.trim()) { 
-                el_d.style.opacity = '0';
-                el_d.textContent = '';
+        function l2() {
+            if (c3.value.trim()) { 
+                d4.style.opacity = '0';
+                d4.textContent = '';
             } else { 
-                el_d.style.opacity = '1'; 
-                el_d.textContent = c_dpt; 
+                d4.style.opacity = '1'; 
+                d4.textContent = k1; 
             }
         }
 
-        el_i.addEventListener('focus', () => { el_d.style.opacity = '0'; });
-        el_i.addEventListener('blur', h_pd);
-        el_i.addEventListener('input', h_pd);
-        document.addEventListener('DOMContentLoaded', h_pd);
+        c3.addEventListener('focus', () => { d4.style.opacity = '0'; });
+        c3.addEventListener('blur', l2);
+        c3.addEventListener('input', l2);
+        document.addEventListener('DOMContentLoaded', l2);
 
-
-        function s_not(m_txt, m_typ = 'success', m_dur = 3000) {
-            const m_div = document.createElement('div');
-            m_div.className = `toast toast-${m_typ}`;
-            m_div.textContent = m_txt;
-            el_g.appendChild(m_div);
-            setTimeout(() => { m_div.classList.add('toast-visible'); }, 10); 
-            setTimeout(() => { m_div.classList.remove('toast-visible'); setTimeout(() => { m_div.remove(); }, 300); }, m_dur);
+        function m3(n4, o5 = 'success', p6 = 3000) {
+            const q7 = document.createElement('div');
+            q7.className = `toast toast-${o5}`;
+            q7.textContent = n4;
+            j0.appendChild(q7);
+            setTimeout(() => { q7.classList.add('toast-visible'); }, 10); 
+            setTimeout(() => { q7.classList.remove('toast-visible'); setTimeout(() => { q7.remove(); }, 300); }, p6);
         }
 
-        async function p_run() {
-            const i_src = el_i.value.trim();
-            el_o.textContent = '';
-            el_c.disabled = true;
+        async function q1_v8() {
+            const r8 = c3.value.trim();
+            f6.textContent = '';
+            g7.disabled = true;
 
-            if (!i_src) { 
-                s_not('Input field empty. Paste HTML code.', 'error'); 
+            if (!r8) { 
+                m3('Input field empty. Paste HTML code.', 'error'); 
                 return; 
             }
 
-            el_t.textContent = 'EXECUTING...';
-            el_l.classList.remove('hidden');
-            el_b.disabled = true;
+            h8.textContent = 'EXECUTING...';
+            i9.classList.remove('hidden');
+            e5.disabled = true;
 
             try {
-                const r_res = await fetch(s_api, {
+                const s9 = await fetch(b1, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ html: i_src })
+                    body: JSON.stringify({ html: r8 })
                 });
 
-                const r_dat = await r_res.json();
+                const t0 = await s9.json();
 
-                if (r_res.ok) {
-                    el_o.textContent = r_dat.jso; 
-                    s_not('Payload generated successfully! Ready to use.', 'success');
-                    el_c.disabled = false;
+                if (s9.ok) {
+                    f6.textContent = t0.jso; 
+                    m3('Payload generated successfully! Ready to use.', 'success');
+                    g7.disabled = false;
                 } else {
-                    s_not(`API Error: ${r_dat.error || 'Server returned an unknown error.'}`, 'error');
-                    el_o.textContent = '';
+                    m3(`API Error: ${t0.error || 'Server returned an unknown error.'}`, 'error');
+                    f6.textContent = '';
                 }
-            } catch (err) {
-                console.error('Network Error:', err);
-                s_not('Connection failed. Check server status.', 'error');
-                el_o.textContent = '';
+            } catch (u1) {
+                console.error('Network Error:', u1);
+                m3('Connection failed. Check server status.', 'error');
+                f6.textContent = '';
             } finally {
-                el_t.textContent = 'GENERATE JSO PAYLOAD';
-                el_l.classList.add('hidden');
-                el_b.disabled = false;
+                h8.textContent = 'GENERATE JSO PAYLOAD';
+                i9.classList.add('hidden');
+                e5.disabled = false;
             }
         }
 
-        async function c_clp() {
-            const d_cpy = el_o.textContent;
-            if (!d_cpy) return;
+        async function r4_n2() {
+            const v2 = f6.textContent;
+            if (!v2) return;
 
             try {
-                await navigator.clipboard.writeText(d_cpy);
-                s_not('Payload copied to clipboard!', 'success');
-            } catch (err) {
-                const h_tmp = document.createElement('textarea');
-                h_tmp.value = d_cpy;
-                h_tmp.style.position = 'absolute';
-                h_tmp.style.left = '-9999px';
-                document.body.appendChild(h_tmp);
-                h_tmp.select();
+                await navigator.clipboard.writeText(v2);
+                m3('Payload copied to clipboard!', 'success');
+            } catch (w3) {
+                const x4 = document.createElement('textarea');
+                x4.value = v2;
+                x4.style.position = 'absolute';
+                x4.style.left = '-9999px';
+                document.body.appendChild(x4);
+                x4.select();
                 
                 try {
                     document.execCommand('copy');
-                    s_not('Payload copied (Fallback Mode)!', 'success');
-                } catch (e) {
-                    s_not('Copy failed. Select text manually.', 'error', 4000);
+                    m3('Payload copied (Fallback Mode)!', 'success');
+                } catch (y5) {
+                    m3('Copy failed. Select text manually.', 'error', 4000);
                 } finally {
-                    document.body.removeChild(h_tmp);
+                    document.body.removeChild(x4);
                 }
             }
         }
