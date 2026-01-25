@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSP-JSO</title>
+    <link rel="icon" href="https://i.imgur.com/mrwDPlj.png" type="image/png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --neon-color: #00FFC2;
+            --dark-bg: #0A0A10;
+            --card-bg: #0D0D15; 
+            --output-bg: #151525;
+            --accent-color: #A0B4FF;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: #E0E0E0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            position: relative; 
+            overflow-x: hidden; /* Prevent horizontal scroll when drawer is hidden */
+        }
+
+        /* --- DRAWER STYLES --- */
+        #side-drawer {
+            position: fixed;
+            top: 0;
+            left: -320px; /* Hidden by default */
+            width: 300px;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-right: 1px solid rgba(0, 255, 194, 0.3);
+            z-index: 100;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        #side-drawer.open {
+            left: 0;
+        }
+        #drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 90;
+            backdrop-filter: blur(4px);
+        }
+        .drawer-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 110;
+            color: var(--neon-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 194, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 194, 0.2);
+        }
+        /* --------------------- */
+
+        .app-card {
+            background-color: var(--card-bg);
+            box-shadow: 
+                0 0 15px rgba(0, 255, 194, 0.15),
+                0 0 40px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 194, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .neon-border-focus {
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .neon-border-focus:focus {
+            border-color: var(--neon-color);
+            box-shadow: 0 0 15px var(--neon-color), inset 0 0 5px rgba(0, 255, 194, 0.5);
+        }
+        .neon-text-main {
+            color: var(--neon-color);
+            text-shadow: 
+                0 0 5px rgba(0, 255, 194, 0.7),
+                0 0 15px rgba(0, 255, 194, 0.4),
+                0 0 25px rgba(0, 255, 194, 0.1);
+        }
+        
+        .neon-btn {
+            background-color: var(--neon-color);
+            color: var(--dark-bg);
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border: none;
+            transition: all 0.2s ease-in-out;
+            animation: pulse-glow 2s infinite alternate ease-in-out;
+        }
+        .neon-btn:hover {
+            box-shadow: 0 0 25px var(--neon-color);
+            transform: translateY(-2px) scale(1.01);
+            animation-play-state: paused;
+        }
+        .neon-btn:active {
+            transform: translateY(0) scale(0.99);
+            box-shadow: 0 0 5px var(--neon-color);
+        }
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 10px rgba(0, 255, 194, 0.7); }
+            to { box-shadow: 0 0 20px rgba(0, 255, 194, 0.9), 0 0 5px rgba(0, 255, 194, 0.5); }
+        }
+
+        .input-box {
+            background-color: var(--output-bg);
+            border: 1px solid #333345;
+            line-height: 1.5;
+            font-size: 0.875rem;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-description {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            right: 1rem;
+            color: #5A5A70;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 0.875rem;
+            line-height: 1.5; 
+        }
+        .loading-spinner-styled {
+            border: 4px solid #33334F;
+            border-top: 4px solid var(--neon-color);
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 6px var(--neon-color);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #jso-result-area {
+            display: block;
+            word-break: normal;
+            white-space: pre; 
+            font-family: ui-monospace, Menlo, Monaco, 'Consolas', monospace;
+            line-height: 1.4;
+        }
+
+        .copy-btn-neon-mini {
+            border: 1px solid var(--neon-color); 
+            box-shadow: 0 0 8px rgba(0, 255, 194, 0.5);
+            background-color: var(--output-bg);
+            color: var(--neon-color);
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 0.7rem; 
+            margin-right: 8px;
+            margin-top: 8px; 
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .copy-btn-neon-mini:hover {
+            box-shadow: 0 0 12px var(--neon-color);
+            background-color: #202035;
+        }
+        .copy-btn-neon-mini:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50; 
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            transform: translateY(20px); 
+            min-width: 250px;
+            max-width: 90vw;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+        .toast-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast-success {
+            background-color: var(--card-bg); 
+            border: 1px solid var(--neon-color);
+            color: var(--neon-color);
+            font-weight: 600;
+            box-shadow: 0 0 10px var(--neon-color), inset 0 0 2px rgba(0, 255, 194, 0.5);
+        }
+        .toast-error {
+            background-color: #A32020;
+            color: #FFDCDC;
+            font-weight: 800;
+            border: 1px solid #E00000;
+            box-shadow: 0 0 10px #FF6B6B;
+        }
+        .footer-link {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="drawer-toggle-btn" onclick="t_drw()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div id="drawer-overlay" onclick="t_drw()"></div>
+
+    <div id="side-drawer">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-2xl font-extrabold neon-text-main">VSP-JSO</h2>
+            <i class="fas fa-times text-gray-400 cursor-pointer hover:text-white transition" onclick="t_drw()"></i>
+        </div>
+
+        <div class="space-y-10">
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">About Tool</h3>
+                <p class="text-sm text-gray-300 leading-relaxed">
+                    VSP-JSO is a specialized utility for converting standard HTML into obfuscated JSO (JavaScript Object) payloads, designed for security researchers and developers.
+                </p>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Developer</h3>
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded bg-gray-800 flex items-center justify-center border border-gray-700">
+                        <i class="fas fa-shield-alt text-neon-color"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-white">Vulnsec Legion</p>
+                        <p class="text-xs text-gray-500">Cybersecurity Collective</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-800">
+                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="flex items-center space-x-2 text-sm text-accent-color hover:text-white transition">
+                    <i class="fab fa-facebook"></i>
+                    <span>Official Facebook</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-4xl p-8 sm:p-12 rounded-xl app-card">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-extrabold neon-text-main tracking-widest">
+                VSP-JSO
+            </h1>
+            <p class="text-md sm:text-xl text-gray-400 mt-2 font-light">Convert HTML into JSO</p>
+        </header>
+
+        <main class="space-y-12">
+            <div class="input-group">
+                <p id="floating-desc-el" class="input-description text-sm sm:text-base">
+                    Paste your HTML code here!
+                </p>
+                <textarea 
+                    id="html-input-zone" 
+                    rows="10" 
+                    class="w-full input-box text-white p-4 rounded-lg neon-border-focus focus:outline-none transition duration-200 resize-none text-sm sm:text-base" 
+                    placeholder=""></textarea>
+            </div>
+
+            <button 
+                id="process-trigger-btn" 
+                class="neon-btn w-full py-3 rounded-lg flex justify-center items-center space-x-3 text-lg"
+                onclick="p_run()">
+                <span id="trigger-text">GENERATE JSO PAYLOAD</span>
+                <div id="loader-icon" class="loading-spinner-styled hidden"></div>
+            </button>
+
+            <div>
+                <h2 class="text-xl font-bold mb-3 neon-text-main">JSO Output (Encoded)</h2>
+                <div class="relative">
+                    <pre class="input-box text-green-400 p-4 rounded-lg neon-border-focus overflow-x-auto h-[16rem] relative">
+                        <code id="jso-result-area" class="text-sm"></code>
+                    </pre>
+                    <button 
+                        id="clip-copy-btn" 
+                        class="absolute top-0 right-0 transition duration-150 z-10 copy-btn-neon-mini"
+                        onclick="c_clp()"
+                        disabled>
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="mt-12 pt-6 border-t border-gray-700/50 text-center text-sm text-gray-500">
+            <p>Developed by: Vulnsec Legion</p>
+            <p class="mt-2 flex justify-center items-center space-x-2">
+                <span class="text-gray-400">Follow for updates</span>
+                <a href="https://www.facebook.com/vulnsec.legion" target="_blank" class="footer-link hover:text-white transition duration-150 text-3xl" aria-label="Follow Vulnsec Legion on Facebook">
+                    <i class="fab fa-facebook-square"></i>
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // --- DRAWER SCRIPT ---
+        function t_drw() {
+            const d = document.getElementById('side-drawer');
+            const o = document.getElementById('drawer-overlay');
+            if (d.classList.contains('open')) {
+                d.classList.remove('open');
+                o.style.display = 'none';
+            } else {
+                d.classList.add('open');
+                o.style.display = 'block';
+            }
+        }
+        // ---------------------
+
+        const s_api = '/api/obfuscate';
+        
+        const el_i = document.getElementById('html-input-zone');
+        const el_d = document.getElementById('floating-desc-el');
+        const el_b = document.getElementById('process-trigger-btn');
+        const el_o = document.getElementById('jso-result-area');
+        const el_c = document.getElementById('clip-copy-btn');
+        const el_t = document.getElementById('trigger-text');
+        const el_l = document.getElementById('loader-icon');
+        const el_g = document.getElementById('toast-container');
+        
+        const c_dpt = 'Paste your HTML code here!';
+
+        function h_pd() {
+            if (el_i.value.trim()) { 
+                el_d.style.opacity = '0';
+                el_d.textContent = '';
+            } else { 
+                el_d.style.opacity = '1'; 
+                el_d.textContent = c_dpt; 
+            }
+        }
+
+        el_i.addEventListener('focus', () => { el_d.style.opacity = '0'; });
+        el_i.addEventListener('blur', h_pd);
+        el_i.addEventListener('input', h_pd);
+        document.addEventListener('DOMContentLoaded', h_pd);
+
+
+        function s_not(m_txt, m_typ = 'success', m_dur = 3000) {
+            const m_div = document.createElement('div');
+            m_div.className = `toast toast-${m_typ}`;
+            m_div.textContent = m_txt;
+            el_g.appendChild(m_div);
+            setTimeout(() => { m_div.classList.add('toast-visible'); }, 10); 
+            setTimeout(() => { m_div.classList.remove('toast-visible'); setTimeout(() => { m_div.remove(); }, 300); }, m_dur);
+        }
+
+        async function p_run() {
+            const i_src = el_i.value.trim();
+            el_o.textContent = '';
+            el_c.disabled = true;
+
+            if (!i_src) { 
+                s_not('Input field empty. Paste HTML code.', 'error'); 
+                return; 
+            }
+
+            el_t.textContent = 'EXECUTING...';
+            el_l.classList.remove('hidden');
+            el_b.disabled = true;
+
+            try {
+                const r_res = await fetch(s_api, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ html: i_src })
+                });
+
+                const r_dat = await r_res.json();
+
+                if (r_res.ok) {
+                    el_o.textContent = r_dat.jso; 
+                    s_not('Payload generated successfully! Ready to use.', 'success');
+                    el_c.disabled = false;
+                } else {
+                    s_not(`API Error: ${r_dat.error || 'Server returned an unknown error.'}`, 'error');
+                    el_o.textContent = '';
+                }
+            } catch (err) {
+                console.error('Network Error:', err);
+                s_not('Connection failed. Check server status.', 'error');
+                el_o.textContent = '';
+            } finally {
+                el_t.textContent = 'GENERATE JSO PAYLOAD';
+                el_l.classList.add('hidden');
+                el_b.disabled = false;
+            }
+        }
+
+        async function c_clp() {
+            const d_cpy = el_o.textContent;
+            if (!d_cpy) return;
+
+            try {
+                await navigator.clipboard.writeText(d_cpy);
+                s_not('Payload copied to clipboard!', 'success');
+            } catch (err) {
+                const h_tmp = document.createElement('textarea');
+                h_tmp.value = d_cpy;
+                h_tmp.style.position = 'absolute';
+                h_tmp.style.left = '-9999px';
+                document.body.appendChild(h_tmp);
+                h_tmp.select();
+                
+                try {
+                    document.execCommand('copy');
+                    s_not('Payload copied (Fallback Mode)!', 'success');
+                } catch (e) {
+                    s_not('Copy failed. Select text manually.', 'error', 4000);
+                } finally {
+                    document.body.removeChild(h_tmp);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
